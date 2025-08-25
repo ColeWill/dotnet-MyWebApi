@@ -24,11 +24,8 @@ var app = builder.Build();
 var employeeRoute = app.MapGroup("employees");
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
@@ -38,10 +35,15 @@ employeeRoute.MapGet(
     {
         return Results.Ok(employees);
     }
-);
+).WithName("GetEmployees")
+.WithOpenApi(operation => new(operation)
+{
+    Summary = "Get all employees",
+    Description = "Retrieves a list of all employees"
+});
 
 employeeRoute.MapGet(
-    string.Empty + "/{id:int}",
+    "/{id:int}",
     (int id) =>
     {
         var employee = employees.SingleOrDefault(e => e.Id == id);
@@ -51,16 +53,26 @@ employeeRoute.MapGet(
         }
         return Results.Ok(employee);
     }
-);
+).WithName("GetEmployeeById")
+.WithOpenApi(operation => new(operation)
+{
+    Summary = "Get employee by ID",
+    Description = "Retrieves a specific employee by their ID"
+});
 
 employeeRoute.MapPost(
     string.Empty,
-    ([Microsoft.AspNetCore.Mvc.FromBody] Employee employee, HttpContext context) =>
+    (Employee employee) =>
     {
         employee.Id = employees.Max(e => e.Id) + 1;
         employees.Add(employee);
         return Results.Created($"employees/{employee.Id}", employee);
     }
-);
+).WithName("CreateEmployee")
+.WithOpenApi(operation => new(operation)
+{
+    Summary = "Create new employee",
+    Description = "Creates a new employee record"
+});
 
 app.Run();
