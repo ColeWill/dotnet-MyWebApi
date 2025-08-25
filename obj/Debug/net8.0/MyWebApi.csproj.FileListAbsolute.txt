@@ -68,3 +68,4 @@
 /Users/cole/Webdev/04_dotnet_c#/dotnet-MyWebApi/obj/Debug/net8.0/MyWebApi.pdb
 /Users/cole/Webdev/04_dotnet_c#/dotnet-MyWebApi/obj/Debug/net8.0/MyWebApi.genruntimeconfig.cache
 /Users/cole/Webdev/04_dotnet_c#/dotnet-MyWebApi/obj/Debug/net8.0/ref/MyWebApi.dll
+/Users/cole/Webdev/04_dotnet_c#/dotnet-MyWebApi/obj/Debug/net8.0/MyWebApi.sourcelink.json
