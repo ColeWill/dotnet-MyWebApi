@@ -29,50 +29,64 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
-employeeRoute.MapGet(
-    string.Empty,
-    () =>
-    {
-        return Results.Ok(employees);
-    }
-).WithName("GetEmployees")
-.WithOpenApi(operation => new(operation)
-{
-    Summary = "Get all employees",
-    Description = "Retrieves a list of all employees"
-});
-
-employeeRoute.MapGet(
-    "/{id:int}",
-    (int id) =>
-    {
-        var employee = employees.SingleOrDefault(e => e.Id == id);
-        if (employee == null)
+employeeRoute
+    .MapGet(
+        string.Empty,
+        () =>
         {
-            return Results.NotFound();
+            return Results.Ok(employees);
         }
-        return Results.Ok(employee);
-    }
-).WithName("GetEmployeeById")
-.WithOpenApi(operation => new(operation)
-{
-    Summary = "Get employee by ID",
-    Description = "Retrieves a specific employee by their ID"
-});
+    )
+    .WithName("GetEmployees")
+    .WithOpenApi(operation =>
+        new(operation)
+        {
+            Summary = "Get all employees",
+            Description = "Retrieves a list of all employees",
+        }
+    );
 
-employeeRoute.MapPost(
-    string.Empty,
-    (Employee employee) =>
-    {
-        employee.Id = employees.Max(e => e.Id) + 1;
-        employees.Add(employee);
-        return Results.Created($"employees/{employee.Id}", employee);
-    }
-).WithName("CreateEmployee")
-.WithOpenApi(operation => new(operation)
-{
-    Summary = "Create new employee",
-    Description = "Creates a new employee record"
-});
+employeeRoute
+    .MapGet(
+        "/{id:int}",
+        (int id) =>
+        {
+            var employee = employees.SingleOrDefault(e => e.Id == id);
+            if (employee == null)
+            {
+                return Results.NotFound();
+            }
+            return Results.Ok(employee);
+        }
+    )
+    .WithName("GetEmployeeById")
+    .WithOpenApi(operation =>
+        new(operation)
+        {
+            Summary = "Get employee by ID",
+            Description = "Retrieves a specific employee by their ID",
+        }
+    );
+
+employeeRoute
+    .MapPost(
+        string.Empty,
+        (Employee employee) =>
+        {
+            employee.Id = employees.Max(e => e.Id) + 1;
+            employees.Add(employee);
+            return Results.Created($"employees/{employee.Id}", employee);
+        }
+    )
+    .WithName("CreateEmployee")
+    .WithOpenApi(operation =>
+        new(operation)
+        {
+            Summary = "Create new employee",
+            Description = "Creates a new employee record",
+        }
+    );
 
 app.Run();
+
+public partial class Program { }
