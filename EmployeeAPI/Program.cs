@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using EmployeeAPI;
 using EmployeeAPI.Abstractions;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 public class Program
@@ -47,6 +48,7 @@ public class Program
         builder.Services.AddSwaggerGen();
         builder.Services.AddSingleton<IRepository<Employee>, EmployeeRepository>();
         builder.Services.AddProblemDetails();
+        builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
         var app = builder.Build();
         // Seed the repository
@@ -115,18 +117,16 @@ public class Program
 
         employeeRoute.MapPost(
             string.Empty,
-            ([FromBody] CreateEmployeeRequest employeeRequest, IRepository<Employee> repository) =>
+            async (
+                [FromBody] CreateEmployeeRequest employeeRequest,
+                IRepository<Employee> repository,
+                IValidator<CreateEmployeeRequest> validator
+            ) =>
             {
-                var validationProblems = new List<ValidationResult>();
-                var isValid = Validator.TryValidateObject(
-                    employeeRequest,
-                    new ValidationContext(employeeRequest),
-                    validationProblems,
-                    true
-                );
-                if (!isValid)
+                var validationResults = await validator.ValidateAsync(employeeRequest);
+                if (!validationResults.IsValid)
                 {
-                    return Results.BadRequest(validationProblems.ToValidationProblemDetails());
+                    return Results.ValidationProblem(validationResults.ToDictionary());
                 }
 
                 var newEmployee = new Employee
