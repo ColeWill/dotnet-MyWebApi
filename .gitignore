@@ -26,6 +26,7 @@ bld/
 *.user
 *.userosscache
 *.sln.docstates
+*.sln
 
 # Auto Generated Files
 Thumbs.db
