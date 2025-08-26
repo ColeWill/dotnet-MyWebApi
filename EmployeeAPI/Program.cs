@@ -1,6 +1,6 @@
+using System.ComponentModel.DataAnnotations;
 using EmployeeAPI;
 using EmployeeAPI.Abstractions;
-using EmployeeAPI.Employees;
 using Microsoft.AspNetCore.Mvc;
 
 public class Program
@@ -15,6 +15,13 @@ public class Program
                 FirstName = "John",
                 LastName = "Doe",
                 SocialSecurityNumber = "123456",
+                Address1 = "123 Main st",
+                Address2 = "Unit #10",
+                City = "Aptos",
+                State = "CA",
+                ZipCode = "95017",
+                PhoneNumber = "123456",
+                Email = "test@test.com",
             },
             new Employee
             {
@@ -22,6 +29,13 @@ public class Program
                 FirstName = "Jane",
                 LastName = "Doe",
                 SocialSecurityNumber = "123456",
+                Address1 = "123 Main st",
+                Address2 = "Unit #10",
+                City = "Aptos",
+                State = "CA",
+                ZipCode = "95017",
+                PhoneNumber = "123456",
+                Email = "test@test.com",
             },
         };
 
@@ -32,9 +46,15 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.AddSingleton<IRepository<Employee>, EmployeeRepository>();
+        builder.Services.AddProblemDetails();
 
         var app = builder.Build();
-
+        // Seed the repository
+        var repository = app.Services.GetRequiredService<IRepository<Employee>>();
+        foreach (var employee in employees)
+        {
+            repository.Create(employee);
+        }
         // Configure the HTTP request pipeline.
         app.UseSwagger();
         app.UseSwaggerUI();
@@ -97,11 +117,23 @@ public class Program
             string.Empty,
             ([FromBody] CreateEmployeeRequest employeeRequest, IRepository<Employee> repository) =>
             {
+                var validationProblems = new List<ValidationResult>();
+                var isValid = Validator.TryValidateObject(
+                    employeeRequest,
+                    new ValidationContext(employeeRequest),
+                    validationProblems,
+                    true
+                );
+                if (!isValid)
+                {
+                    return Results.BadRequest(validationProblems);
+                }
+
                 var newEmployee = new Employee
                 {
                     Id = repository.GetAll().Max(e => e.Id) + 1,
-                    FirstName = employeeRequest.FirstName,
-                    LastName = employeeRequest.LastName,
+                    FirstName = employeeRequest.FirstName!,
+                    LastName = employeeRequest.LastName!,
                     SocialSecurityNumber = employeeRequest.SocialSecurityNumber,
                     Address1 = employeeRequest.Address1,
                     Address2 = employeeRequest.Address2,
