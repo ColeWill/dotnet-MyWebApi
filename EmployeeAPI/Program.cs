@@ -1,3 +1,5 @@
+using EmployeeAPI;
+using EmployeeAPI.Abstractions;
 using EmployeeAPI.Employees;
 using Microsoft.AspNetCore.Mvc;
 
@@ -29,6 +31,7 @@ public class Program
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        builder.Services.AddSingleton<IRepository<Employee>, EmployeeRepository>();
 
         var app = builder.Build();
 
@@ -36,35 +39,38 @@ public class Program
         app.UseSwagger();
         app.UseSwaggerUI();
 
+        // App Routes *********************************
         var employeeRoute = app.MapGroup("/employees");
 
         employeeRoute.MapGet(
             string.Empty,
-            () =>
+            (IRepository<Employee> repository) =>
             {
                 return Results.Ok(
-                    employees.Select(employee => new GetEmployeeResponse
-                    {
-                        FirstName = employee.FirstName,
-                        LastName = employee.LastName,
+                    repository
+                        .GetAll()
+                        .Select(employee => new GetEmployeeResponse
+                        {
+                            FirstName = employee.FirstName,
+                            LastName = employee.LastName,
 
-                        Address1 = employee.Address1,
-                        Address2 = employee.Address2,
-                        City = employee.City,
-                        State = employee.State,
-                        ZipCode = employee.ZipCode,
-                        PhoneNumber = employee.PhoneNumber,
-                        Email = employee.Email,
-                    })
+                            Address1 = employee.Address1,
+                            Address2 = employee.Address2,
+                            City = employee.City,
+                            State = employee.State,
+                            ZipCode = employee.ZipCode,
+                            PhoneNumber = employee.PhoneNumber,
+                            Email = employee.Email,
+                        })
                 );
             }
         );
 
         employeeRoute.MapGet(
             "{id:int}",
-            (int id) =>
+            (int id, IRepository<Employee> repository) =>
             {
-                var employee = employees.SingleOrDefault(e => e.Id == id);
+                var employee = repository.GetById(id);
                 if (employee == null)
                 {
                     return Results.NotFound();
@@ -89,47 +95,44 @@ public class Program
 
         employeeRoute.MapPost(
             string.Empty,
-            ([FromBody] CreateEmployeeRequest employee) =>
+            ([FromBody] CreateEmployeeRequest employeeRequest, IRepository<Employee> repository) =>
             {
                 var newEmployee = new Employee
                 {
-                    Id = employees.Max(e => e.Id) + 1,
-                    FirstName = employee.FirstName,
-                    LastName = employee.LastName,
-                    SocialSecurityNumber = employee.SocialSecurityNumber,
-                    Address1 = employee.Address1,
-                    Address2 = employee.Address2,
-                    City = employee.City,
-                    State = employee.State,
-                    ZipCode = employee.ZipCode,
-                    PhoneNumber = employee.PhoneNumber,
-                    Email = employee.Email,
+                    Id = repository.GetAll().Max(e => e.Id) + 1,
+                    FirstName = employeeRequest.FirstName,
+                    LastName = employeeRequest.LastName,
+                    SocialSecurityNumber = employeeRequest.SocialSecurityNumber,
+                    Address1 = employeeRequest.Address1,
+                    Address2 = employeeRequest.Address2,
+                    City = employeeRequest.City,
+                    State = employeeRequest.State,
+                    ZipCode = employeeRequest.ZipCode,
+                    PhoneNumber = employeeRequest.PhoneNumber,
+                    Email = employeeRequest.Email,
                 };
-                employees.Add(newEmployee);
-                return Results.Created($"/employees/{newEmployee.Id}", employee);
+                repository.Create(newEmployee);
+                return Results.Created($"/employees/{newEmployee.Id}", employeeRequest);
             }
         );
 
         employeeRoute.MapPut(
             "{id}",
-            ([FromBody] Employee employee, int id) =>
+            (UpdateEmployeeRequest employeeRequest, int id, IRepository<Employee> repository) =>
             {
-                var existingEmployee = employees.SingleOrDefault(e => e.Id == id);
+                var existingEmployee = repository.GetById(id);
                 if (existingEmployee == null)
                 {
                     return Results.NotFound();
                 }
 
-                existingEmployee.FirstName = employee.FirstName;
-                existingEmployee.LastName = employee.LastName;
-                existingEmployee.SocialSecurityNumber = employee.SocialSecurityNumber;
-                existingEmployee.Address1 = employee.Address1;
-                existingEmployee.Address2 = employee.Address2;
-                existingEmployee.City = employee.City;
-                existingEmployee.State = employee.State;
-                existingEmployee.ZipCode = employee.ZipCode;
-                existingEmployee.PhoneNumber = employee.PhoneNumber;
-                existingEmployee.Email = employee.Email;
+                existingEmployee.Address1 = employeeRequest.Address1;
+                existingEmployee.Address2 = employeeRequest.Address2;
+                existingEmployee.City = employeeRequest.City;
+                existingEmployee.State = employeeRequest.State;
+                existingEmployee.ZipCode = employeeRequest.ZipCode;
+                existingEmployee.PhoneNumber = employeeRequest.PhoneNumber;
+                existingEmployee.Email = employeeRequest.Email;
 
                 return Results.Ok(existingEmployee);
             }
