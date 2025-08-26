@@ -126,7 +126,7 @@ public class Program
                 );
                 if (!isValid)
                 {
-                    return Results.BadRequest(validationProblems);
+                    return Results.BadRequest(validationProblems.ToValidationProblemDetails());
                 }
 
                 var newEmployee = new Employee
@@ -134,7 +134,7 @@ public class Program
                     Id = repository.GetAll().Max(e => e.Id) + 1,
                     FirstName = employeeRequest.FirstName!,
                     LastName = employeeRequest.LastName!,
-                    SocialSecurityNumber = employeeRequest.SocialSecurityNumber,
+                    SocialSecurityNumber = employeeRequest.SocialSecurityNumber!,
                     Address1 = employeeRequest.Address1,
                     Address2 = employeeRequest.Address2,
                     City = employeeRequest.City,
