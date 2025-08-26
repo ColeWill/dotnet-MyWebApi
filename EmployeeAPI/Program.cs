@@ -1,3 +1,4 @@
+using EmployeeAPI.Employees;
 using Microsoft.AspNetCore.Mvc;
 
 public class Program
@@ -41,7 +42,21 @@ public class Program
             string.Empty,
             () =>
             {
-                return employees;
+                return Results.Ok(
+                    employees.Select(employee => new GetEmployeeResponse
+                    {
+                        FirstName = employee.FirstName,
+                        LastName = employee.LastName,
+
+                        Address1 = employee.Address1,
+                        Address2 = employee.Address2,
+                        City = employee.City,
+                        State = employee.State,
+                        ZipCode = employee.ZipCode,
+                        PhoneNumber = employee.PhoneNumber,
+                        Email = employee.Email,
+                    })
+                );
             }
         );
 
@@ -54,17 +69,44 @@ public class Program
                 {
                     return Results.NotFound();
                 }
-                return Results.Ok(employee);
+                return Results.Ok(
+                    new GetEmployeeResponse
+                    {
+                        FirstName = employee.FirstName,
+                        LastName = employee.LastName,
+
+                        Address1 = employee.Address1,
+                        Address2 = employee.Address2,
+                        City = employee.City,
+                        State = employee.State,
+                        ZipCode = employee.ZipCode,
+                        PhoneNumber = employee.PhoneNumber,
+                        Email = employee.Email,
+                    }
+                );
             }
         );
 
         employeeRoute.MapPost(
             string.Empty,
-            (Employee employee) =>
+            ([FromBody] CreateEmployeeRequest employee) =>
             {
-                employee.Id = employees.Max(e => e.Id) + 1; // We're not using a database, so we need to manually assign an ID
-                employees.Add(employee);
-                return Results.Created($"/employees/{employee.Id}", employee);
+                var newEmployee = new Employee
+                {
+                    Id = employees.Max(e => e.Id) + 1,
+                    FirstName = employee.FirstName,
+                    LastName = employee.LastName,
+                    SocialSecurityNumber = employee.SocialSecurityNumber,
+                    Address1 = employee.Address1,
+                    Address2 = employee.Address2,
+                    City = employee.City,
+                    State = employee.State,
+                    ZipCode = employee.ZipCode,
+                    PhoneNumber = employee.PhoneNumber,
+                    Email = employee.Email,
+                };
+                employees.Add(newEmployee);
+                return Results.Created($"/employees/{newEmployee.Id}", employee);
             }
         );
 
